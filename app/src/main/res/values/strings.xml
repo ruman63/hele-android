@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Hele</string>
+    <string name="action_settings">Settings</string>
+    <array name="categories">
+        <item>All</item>
+    </array>
+</resources>
