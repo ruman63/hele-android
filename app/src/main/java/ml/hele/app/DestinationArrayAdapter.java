@@ -1,12 +1,9 @@
 package ml.hele.app;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,8 +12,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.URL;
 import java.util.List;
+
+import ml.hele.app.api.OnPostPreExecute;
 
 /**
  * Created by rumman on 12/3/17.
@@ -26,40 +26,75 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
     List<Destination> list;
     Context context;
     int layoutResource;
+    ImageView thumbnailView;
+    LayoutInflater inflater;
 
 
-    public DestinationArrayAdapter(Context context, int resource, List<Destination> objects) {
+
+    public static class ViewHolder{
+        TextView idView;
+        TextView nameView;
+        TextView categoryView;
+        ImageView thumbnailView;
+        URL imageURL;
+        Bitmap image;
+    }
+
+    private class DownloadThumbnail extends AsyncTask<ViewHolder, Void, ViewHolder>{
+
+        @Override
+        protected ViewHolder doInBackground(ViewHolder... params) {
+            ViewHolder viewHolder  =params[0];
+            try{
+                URL url = viewHolder.imageURL;
+                viewHolder.image = BitmapFactory.decodeStream(url.openStream());
+            } catch (IOException e){
+                Log.d("Error Loading Thumbnail", e.getMessage());
+                viewHolder.image = null;
+            }
+
+            return viewHolder;
+        }
+
+        @Override
+        protected void onPostExecute(ViewHolder viewHolder) {
+            if(viewHolder.image != null)
+               viewHolder.thumbnailView.setImageBitmap(viewHolder.image);
+        }
+    }
+
+    DestinationArrayAdapter(Context context, int resource, List<Destination> objects) {
         super(context, resource, objects);
         this.context=context;
+        inflater = LayoutInflater.from(context);
         list=objects;
         layoutResource = resource;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder viewHolder = null;
+        if(convertView==null) {
+            convertView = inflater.inflate(layoutResource, null);
+            viewHolder = new ViewHolder();
+            viewHolder.idView = (TextView) convertView.findViewById(R.id.id);
+            viewHolder.nameView = (TextView) convertView.findViewById(R.id.name);
+            viewHolder.categoryView = (TextView) convertView.findViewById(R.id.category);
+            viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.thumbnail);
+            convertView.setTag(viewHolder);
+        }
 
-        convertView = LayoutInflater.from(context).inflate(layoutResource, null);
-
-        TextView idView = (TextView) convertView.findViewById(R.id.id);
-        TextView nameView = (TextView) convertView.findViewById(R.id.name);
-       // TextView locationView = (TextView) convertView.findViewById(R.id.location);
-        TextView categoryView = (TextView) convertView.findViewById(R.id.category);
-        ImageView thumbnailView = (ImageView) convertView.findViewById(R.id.thumbnail);
+        viewHolder = (ViewHolder)convertView.getTag();
 
         Destination destination = list.get(position);
-        Log.d("Item: ", destination.toString());
-        idView.setText(destination.getId()+"");
-        nameView.setText(destination.getName());
+        viewHolder.idView.setText(String.valueOf(destination.getId()));
+        viewHolder.nameView.setText(destination.getName());
+        viewHolder.categoryView.setText(destination.getCategory());
+        viewHolder.imageURL = destination.getLinkThumb();
+        new DownloadThumbnail().execute(viewHolder);
 
-        categoryView.setText(destination.getCategory());
-        if(destination.getThumb() != null ) {
-            thumbnailView.setImageBitmap(destination.getThumb());
-            thumbnailView.setAlpha(0.75f);
-        }
         return convertView;
     }
 
-    public void setData(ArrayList<Destination> items){
-        list=items;
-    }
+
 }

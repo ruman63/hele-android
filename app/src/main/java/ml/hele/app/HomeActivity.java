@@ -2,10 +2,8 @@ package ml.hele.app;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -15,16 +13,13 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import ml.hele.app.api.OnPostPreExecute;
-import ml.hele.app.api.RetrieveCategories;
 import ml.hele.app.api.RetrieveList;
 
 public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<ArrayList<Destination>>, TextWatcher {

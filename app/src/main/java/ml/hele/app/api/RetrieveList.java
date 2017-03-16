@@ -26,7 +26,7 @@ public class RetrieveList extends AsyncTask< String, Void, ArrayList<Destination
 
     String error = null;
 
-    public RetrieveList( OnPostPreExecute < ArrayList <Destination> > beforeAndAfter ){
+    public RetrieveList(OnPostPreExecute < ArrayList <Destination> > beforeAndAfter ){
 
         this.beforeAndAfter = beforeAndAfter;
     }
@@ -69,9 +69,9 @@ public class RetrieveList extends AsyncTask< String, Void, ArrayList<Destination
                     String name = object.getString("name");
                     String location = object.getString("location");
                     String category = object.getString("category");
-                    String encthumb = object.getString("thumb");
+                    String linkthumb = object.getString("thumb");
 
-                    Destination destination = new Destination(id, name, location, category, encthumb);
+                    Destination destination = new Destination(id, name, location, category, linkthumb);
                     allList.add(destination);
 
                 }

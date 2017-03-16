@@ -1,8 +1,10 @@
 package ml.hele.app;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Created by rumman on 12/3/17.
@@ -13,15 +15,15 @@ public class Destination {
     private String name;
     private String location;
     private String category;
-    private Bitmap thumb;
+    private URL linkThumb;
 
 
-    public Destination(int id, String name, String location, String category, String encThumb) {
+    public Destination(int id, String name, String location, String category, String link) throws MalformedURLException {
         this.id = id;
         this.name = name;
         this.location = location;
         this.category = category;
-        setThumb(encThumb);
+        this.linkThumb = new URL(link);
     }
 
     public Integer getId() {
@@ -50,16 +52,12 @@ public class Destination {
 
     public void setCategory(String category) { this.category = category; }
 
-    public Bitmap getThumb() {
-        return thumb;
+    public URL getLinkThumb() {
+        return linkThumb;
     }
 
-    public void setThumb(Bitmap thumb) {
-        this.thumb = thumb;
+    public void setLinkThumb(URL linkThumb) {
+        this.linkThumb = linkThumb;
     }
 
-    public void setThumb( String base64EncodedImage) {
-            byte[] decodedBytes = Base64.decode(base64EncodedImage, Base64.DEFAULT);
-            thumb = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-    }
 }
