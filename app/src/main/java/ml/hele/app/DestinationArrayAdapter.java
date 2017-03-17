@@ -26,7 +26,6 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
     List<Destination> list;
     Context context;
     int layoutResource;
-    ImageView thumbnailView;
     LayoutInflater inflater;
 
 
@@ -41,6 +40,10 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
     }
 
     private class DownloadThumbnail extends AsyncTask<ViewHolder, Void, ViewHolder>{
+        @Override
+        protected void onPreExecute() {
+
+        }
 
         @Override
         protected ViewHolder doInBackground(ViewHolder... params) {
@@ -91,6 +94,8 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
         viewHolder.nameView.setText(destination.getName());
         viewHolder.categoryView.setText(destination.getCategory());
         viewHolder.imageURL = destination.getLinkThumb();
+        viewHolder.thumbnailView.setImageResource(R.drawable.image_loading);
+        viewHolder.thumbnailView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         new DownloadThumbnail().execute(viewHolder);
 
         return convertView;
