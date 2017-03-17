@@ -3,7 +3,9 @@ package ml.hele.app;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.util.LruCache;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -22,9 +24,10 @@ import java.util.ArrayList;
 import ml.hele.app.api.OnPostPreExecute;
 import ml.hele.app.api.RetrieveList;
 
-public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<ArrayList<Destination>>, TextWatcher {
+public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<ArrayList<Destination>> {
     ProgressDialog progress;
     ListView destinationsList;
+    private LruCache<String, Bitmap> mMemoryCache;  //Memory Cache for bitmap loading in List
     //Spinner categoriesOptions;
 
     ArrayList<Destination> destinationArrayList;
@@ -36,6 +39,26 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        /**
+         * Get max available VM memory, exceeding this amount will throw an OutOfMemory Exception.
+         * Init Memory Cache with 1/8 th of available memory in Kilobytes.
+         */
+
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+        final int cacheSize = maxMemory / 8;
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
+
+
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //categoriesArrayList = new ArrayList<String>();
@@ -138,7 +161,28 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
         destinationsList.setAdapter(destinationAdapter);
     }
 
-    @Override
+    /**
+     * Add Bitmap to LruCache with unique string key
+     * @param key
+     * @param bitmap
+     */
+    public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+        if (getBitmapFromMemCache(key) == null) {
+            mMemoryCache.put(key, bitmap);
+        }
+    }
+
+    /**
+     * Get Bitmap from cache using unique string key
+     * @param key
+     * @return
+     */
+    public Bitmap getBitmapFromMemCache(String key) {
+        return mMemoryCache.get(key);
+    }
+
+
+    /*@Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
     }
@@ -151,5 +195,5 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
     @Override
     public void afterTextChanged(Editable s) {
 
-    }
+    }*/
 }

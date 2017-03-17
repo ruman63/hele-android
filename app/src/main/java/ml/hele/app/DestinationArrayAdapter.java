@@ -1,5 +1,6 @@
 package ml.hele.app;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -25,9 +26,9 @@ import ml.hele.app.api.OnPostPreExecute;
 
 public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
     List<Destination> list;
-    Context context;
     int layoutResource;
     LayoutInflater inflater;
+    HomeActivity caller ;
 
 
 
@@ -37,14 +38,11 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
         TextView categoryView;
         ImageView thumbnailView;
         URL imageURL;
+        String cacheKey;
         Bitmap image;
     }
 
     private class DownloadThumbnail extends AsyncTask<ViewHolder, Void, ViewHolder>{
-        @Override
-        protected void onPreExecute() {
-
-        }
 
         @Override
         protected ViewHolder doInBackground(ViewHolder... params) {
@@ -63,15 +61,22 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
 
         @Override
         protected void onPostExecute(ViewHolder viewHolder) {
-            if(viewHolder.image != null)
-               viewHolder.thumbnailView.setImageBitmap(viewHolder.image);
+
+            /**
+             * if downmloaded successfully add to memcache
+             */
+
+            if(viewHolder.image != null) {
+                caller.addBitmapToMemoryCache(viewHolder.cacheKey, viewHolder.image);
+                viewHolder.thumbnailView.setImageBitmap(viewHolder.image);
+            }
         }
     }
 
     DestinationArrayAdapter(Context context, int resource, List<Destination> objects) {
         super(context, resource, objects);
-        this.context=context;
-        inflater = LayoutInflater.from(context);
+        caller= (HomeActivity)(context);
+        inflater = LayoutInflater.from(caller);
         list=objects;
         layoutResource = resource;
     }
@@ -86,6 +91,7 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
             viewHolder.nameView = (TextView) convertView.findViewById(R.id.name);
             viewHolder.categoryView = (TextView) convertView.findViewById(R.id.category);
             viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.thumbnail);
+            viewHolder.cacheKey = "";
             convertView.setTag(viewHolder);
         }
 
@@ -96,8 +102,27 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
         viewHolder.nameView.setText(destination.getName());
         viewHolder.categoryView.setText(destination.getCategory());
         viewHolder.imageURL = destination.getLinkThumb();
-        viewHolder.thumbnailView.setImageResource(R.drawable.image_loading);
-        new DownloadThumbnail().execute(viewHolder);
+
+        /**
+         * Assign a Unique Key i.e UID_Name for cache
+         * Get instance of caller activity that implements cache
+         * Get Bitmap from Mem cache
+         * If bitmap available set it to thumbnail
+         */
+
+        viewHolder.cacheKey = destination.getId()+"_"+destination.getName();
+        final Bitmap bitmap = caller.getBitmapFromMemCache(viewHolder.cacheKey);
+
+        if(bitmap != null){
+            viewHolder.thumbnailView.setImageBitmap(bitmap);
+        }
+
+        else {
+            //else if bitmap not available in cache then, download
+
+            viewHolder.thumbnailView.setImageResource(R.drawable.image_loading);
+            new DownloadThumbnail().execute(viewHolder);
+        }
 
         return convertView;
     }
