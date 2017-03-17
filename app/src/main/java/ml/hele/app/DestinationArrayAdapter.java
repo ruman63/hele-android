@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 
 import ml.hele.app.api.OnPostPreExecute;
@@ -50,6 +51,7 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
             ViewHolder viewHolder  =params[0];
             try{
                 URL url = viewHolder.imageURL;
+                Log.d("URL: ", url.toString());
                 viewHolder.image = BitmapFactory.decodeStream(url.openStream());
             } catch (IOException e){
                 Log.d("Error Loading Thumbnail", e.getMessage());
@@ -95,7 +97,6 @@ public class DestinationArrayAdapter extends ArrayAdapter<Destination> {
         viewHolder.categoryView.setText(destination.getCategory());
         viewHolder.imageURL = destination.getLinkThumb();
         viewHolder.thumbnailView.setImageResource(R.drawable.image_loading);
-        viewHolder.thumbnailView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         new DownloadThumbnail().execute(viewHolder);
 
         return convertView;
