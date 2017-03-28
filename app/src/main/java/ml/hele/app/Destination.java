@@ -11,6 +11,12 @@ import java.net.URL;
  */
 
 public class Destination {
+    public static final String DEST_ID = "id";
+    public static final String DEST_NAME = "name";
+    public static final String DEST_LOCATION = "location";
+    public static final String DEST_CATEGORY = "category";
+    public static final String DEST_THUMBNAIL = "thumb";
+
     private Integer id;
     private String name;
     private String location;
