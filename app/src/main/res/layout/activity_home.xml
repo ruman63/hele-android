@@ -22,6 +22,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:drawable/edit_text"
                 android:id="@+id/search_field"
+                android:inputType="text"
                 android:textColor="@android:color/black"
                 android:visibility="gone"
                 />

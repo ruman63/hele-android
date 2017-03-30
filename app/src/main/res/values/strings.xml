@@ -3,6 +3,7 @@
     <string name="action_feedback">Give Feedback</string>
     <string name="connecting">Connecting to the server &#8230;</string>
     <string name="content_loading">Loading Destinations &#8230;</string>
+    <string name="norecord">Sorry, Nothing Found&#8230;!</string>
     <string name="action_search">Search</string>
     <array name="categories">
         <item>All</item>

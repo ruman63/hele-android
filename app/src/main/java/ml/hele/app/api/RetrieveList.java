@@ -65,8 +65,8 @@ public class RetrieveList extends AsyncTask < ContentValues, String, HashMap <St
      */
     @Override
     protected HashMap <String, Object> doInBackground(ContentValues... params)  {
-        HashMap<String, Object> result = new HashMap<String, Object>();
-        ArrayList<Destination> allList= new ArrayList<Destination>();
+        HashMap<String, Object> result = new HashMap<>();
+        ArrayList<Destination> allList= new ArrayList<>();
         try {
             String addr = HeleApi.HELE_RETRIEVE_ALL_PLACES_URL;
             if (params.length > 0 && params[0].containsKey(PAGE_NUMBER)){

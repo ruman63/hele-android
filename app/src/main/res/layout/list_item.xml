@@ -19,7 +19,7 @@
         android:id="@+id/thumbnail"
         android:scaleType="centerCrop"/>
     <ProgressBar
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="@dimen/list_item_height"
         android:layout_centerInParent="true"
         android:id="@+id/load"/>

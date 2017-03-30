@@ -1,7 +1,6 @@
 package ml.hele.app;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,16 +15,16 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,22 +35,23 @@ import ml.hele.app.api.HeleApi;
 import ml.hele.app.api.OnPostPreExecute;
 import ml.hele.app.api.RetrieveList;
 
+import static android.view.View.GONE;
+
 public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<HashMap<String, Object>>, View.OnClickListener {
     View progress;
     TextView progressText;
+    ProgressBar progressBar;
     ListView destinationsList;
     RetrieveList fetchList;
     Button nextButton, prevButton;
     EditText searchField;
     MenuItem searchMenu, closeMenu;
     int lastPage, currentPage;
+    ContentValues parameters;
     private LruCache<String, Bitmap> mMemoryCache;  //Memory Cache for bitmap loading in List
-    //Spinner categoriesOptions;
     ArrayList<Destination> destinationArrayList;
     View listFooterView;
-    //ArrayList<String> categoriesArrayList;
     DestinationArrayAdapter destinationAdapter;
-    //ArrayAdapter<String> categoriesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +82,8 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
                 searchMenu.setVisible(false);
                 break;
             case R.id.action_close_search:
-                searchField.setVisibility(View.GONE);
+                searchField.setText(null);
+                searchField.setVisibility(GONE);
                 searchMenu.setVisible(true);
                 closeMenu.setVisible(false);
             case R.id.action_feedback:
@@ -98,41 +99,25 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
             Log.d("NetWork State", "Not Connected");
         }
         else {
-            AsyncTask.Status stat =fetchList.getStatus();
+            AsyncTask.Status stat = fetchList.getStatus();
             fetchList.cancel(true);
             fetchList = new RetrieveList(this, progressText);
             fetchList.execute(params);
         }
-      /*  new RetrieveCategories(new OnPostPreExecute<ArrayList<String>>() {
-            @Override
-            public void onPreExecute() {
-
-            }
-
-            @Override
-            public void onPostExecute(ArrayList<String> categories, String errorMessage) {
-                Log.d("Category Content Loaded", "Content length: " + categories.size());
-                categoriesArrayList = categories;
-                Log.d("List: ", categoriesArrayList.toString());
-                categoriesAdapter = new ArrayAdapter<String>(HomeActivity.this, R.layout.spinner_item, R.id.spinner_category_name, categoriesArrayList);
-                Log.d("Adapter: ", categoriesAdapter.toString());
-                categoriesOptions.setAdapter(categoriesAdapter);
-            }
-        }).execute();*/
     }
 
     @Override
     public void onPreExecute() {
         progress.setVisibility(View.VISIBLE);
-        destinationsList.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+        destinationsList.setVisibility(GONE);
         progressText.setText(getString(R.string.connecting));
 
     }
 
     @Override
     public void onPostExecute(HashMap <String, Object> result, String errorMessage) {
-        progress.setVisibility(View.GONE);
-        destinationsList.setVisibility(View.VISIBLE);
+
         if (errorMessage != null) {
             Log.d("Content Failed to Load", errorMessage);
             AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
@@ -149,22 +134,31 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
             ContentValues pageInfo = (ContentValues) result.get(RetrieveList.PAGE_INFO_KEY);
             currentPage = pageInfo.getAsInteger(RetrieveList.PAGE_CURRENT_KEY);
             lastPage = pageInfo.getAsInteger(RetrieveList.PAGE_LAST_KEY);
-
             if(currentPage == lastPage)
-                nextButton.setVisibility(View.GONE);
+                nextButton.setVisibility(GONE);
             else
                 nextButton.setVisibility(View.VISIBLE);
             if(currentPage == 1)
-                prevButton.setVisibility(View.GONE);
+                prevButton.setVisibility(GONE);
             else
                 prevButton.setVisibility(View.VISIBLE);
 
             Log.d("Content Loaded", "Content length: " + destinations.size());
             destinationArrayList = destinations;
-            Log.d("List: ", destinationArrayList.toString());
-            destinationAdapter = new DestinationArrayAdapter(HomeActivity.this, R.layout.list_item, destinationArrayList);
-            Log.d("Adapter: ", destinationAdapter.toString());
-            destinationsList.setAdapter(destinationAdapter);
+
+            if(destinationArrayList.isEmpty()) {
+                destinationsList.setVisibility(GONE);
+                progress.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+                progressText.setText(getString(R.string.norecord));
+            } else {
+                progress.setVisibility(GONE);
+                destinationsList.setVisibility(View.VISIBLE);
+                Log.d("List: ", destinationArrayList.toString());
+                destinationAdapter = new DestinationArrayAdapter(HomeActivity.this, R.layout.list_item, destinationArrayList);
+                Log.d("Adapter: ", destinationAdapter.toString());
+                destinationsList.setAdapter(destinationAdapter);
+            }
         }
     }
 
@@ -182,7 +176,7 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
     /**
      * Get Bitmap from cache using unique string key
      * @param key
-     * @return
+     * @return bitmap
      */
     public Bitmap getBitmapFromMemCache(String key) {
         return mMemoryCache.get(key);
@@ -216,13 +210,14 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
 
     private void init(){
         initResources();
-        fetch();
+        fetch(parameters);
     }
 
     private void initResources() {
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        parameters = new ContentValues();
         searchField = (EditText) toolbar.findViewById(R.id.search_field);
         searchField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -236,16 +231,15 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
             @Override
             public void afterTextChanged(Editable s) {
                 String searchString = s.toString();
-                ContentValues values = new ContentValues();
-                values.put(HeleApi.PARAMETER_SEARCH, searchString);
-                fetch(values);
+                parameters.put(HeleApi.PARAMETER_SEARCH, searchString);
+                parameters.put(RetrieveList.PAGE_NUMBER, 1);
+                fetch(parameters);
             }
         });
         currentPage = lastPage = 1;
         progress = findViewById(R.id.loading_view);
+        progressBar = (ProgressBar) progress.findViewById(R.id.indefiniteBar);
         progressText = (TextView) progress.findViewById(R.id.loading_text);
-        //categoriesArrayList = new ArrayList<String>();
-
         fetchList = new RetrieveList(this, progressText);
         destinationArrayList = new ArrayList<>();
         destinationsList = (ListView) findViewById(R.id.placelist);
@@ -257,10 +251,12 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
         prevButton = (Button) listFooterView.findViewById(R.id.list_footer_prev);
         nextButton.setOnClickListener(this);
         prevButton.setOnClickListener(this);
-        destinationAdapter = new DestinationArrayAdapter(this,R.layout.list_item, destinationArrayList);
+
+
+        //destinationAdapter = new DestinationArrayAdapter(this,R.layout.list_item, destinationArrayList);
         // categoriesAdapter = new ArrayAdapter<String>(this, R.layout.spinner_item, R.id.spinner_category_name, categoriesArrayList);
 
-        destinationsList.setAdapter(destinationAdapter);
+        //destinationsList.setAdapter(destinationAdapter);
         // categoriesOptions.setAdapter(categoriesAdapter);
         destinationsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -288,6 +284,8 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
             }
         };
     }
+
+    //stub for destination details. onclicking any destination
     private void showDestination(View view) {
         TextView text = (TextView) view.findViewById(R.id.name);
         String title = text.getText().toString();
@@ -300,24 +298,25 @@ public class HomeActivity extends AppCompatActivity implements OnPostPreExecute<
     public void onClick(View v) {
         destinationsList.setAdapter(null);
         int id = v.getId();
-        ContentValues values = new ContentValues();
         switch(id) {
             case R.id.list_footer_next:
-                loadNext(values);
+                loadNext(parameters);
                 break;
             case R.id.list_footer_prev:
-                loadPrev(values);
+                loadPrev(parameters);
                 break;
             default: return;
         }
-        new RetrieveList(this, progressText).execute(values);
+        fetch(parameters);
     }
 
     public void loadNext(ContentValues values) {
+        values.remove(RetrieveList.PAGE_NUMBER);
         values.put(RetrieveList.PAGE_NUMBER, currentPage+1);
     }
 
     public void loadPrev(ContentValues values) {
+        values.remove(RetrieveList.PAGE_NUMBER);
         values.put(RetrieveList.PAGE_NUMBER, currentPage-1);
     }
 }
