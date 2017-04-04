@@ -16,6 +16,7 @@ public class Destination {
     public static final String DEST_LOCATION = "location";
     public static final String DEST_CATEGORY = "category";
     public static final String DEST_THUMBNAIL = "thumb";
+    public static final String DEST_DESC = "description";
 
     private Integer id;
     private String name;

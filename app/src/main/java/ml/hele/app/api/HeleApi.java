@@ -10,6 +10,10 @@ public final class HeleApi {
 
     public static final String PARAMETER_SEARCH =  "searchString";
 
+    public static String getDetailsURL(int id) {
+        return HELE_HOST_API_URL+"/places/"+id;
+    }
+
 
 
 
